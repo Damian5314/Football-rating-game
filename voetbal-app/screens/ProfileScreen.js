@@ -1,8 +1,12 @@
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import FriendScreen from './ProfileButtons/FriendScreen';
+import PredictionsScreen from './ProfileButtons/PredictionScreen';
+import ViewedScreen from './ProfileButtons/ViewedScreen';
 
-export default function ProfileScreen() {
+function ProfileScreenContent({ navigation }) {
   const [avatar, setAvatar] = useState(null);
   const [username, setUsername] = useState('');
 
@@ -11,10 +15,8 @@ export default function ProfileScreen() {
       try {
         const res = await fetch('https://randomuser.me/api/');
         const data = await res.json();
-
         const photoUrl = data.results[0].picture.large;
         const name = data.results[0].login.username;
-
         setAvatar(photoUrl);
         setUsername(name);
       } catch (error) {
@@ -27,7 +29,6 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Profielfoto + gebruikersnaam */}
       <View style={styles.profileImage}>
         {avatar ? (
           <Image source={{ uri: avatar }} style={styles.avatar} />
@@ -37,22 +38,49 @@ export default function ProfileScreen() {
         <Text style={styles.username}>@{username}</Text>
       </View>
 
-      {/* Statistische kaarten */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
+        <TouchableOpacity
+          style={styles.statCard}
+          onPress={() => navigation.navigate('Viewed')}
+        >
           <Text style={styles.statNumber}>70</Text>
           <Text style={styles.statLabel}>Matches Viewed</Text>
-        </View>
-        <View style={styles.statCard}>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.statCard}
+          onPress={() => navigation.navigate('Predictions')}
+        >
           <Text style={styles.statNumber}>20</Text>
           <Text style={styles.statLabel}>Correct Predictions</Text>
-        </View>
-        <View style={styles.statCard}>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.statCard}
+          onPress={() => navigation.navigate('Friends')}
+        >
           <Text style={styles.statNumber}>5</Text>
           <Text style={styles.statLabel}>Friends</Text>
-        </View>
+        </TouchableOpacity>
       </View>
     </ScrollView>
+  );
+}
+
+const Stack = createNativeStackNavigator();
+
+export default function ProfileScreen() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreenContent}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Viewed" component={ViewedScreen} />
+      <Stack.Screen name="Predictions" component={PredictionsScreen} />
+      <Stack.Screen name="Friends" component={FriendScreen} />
+    </Stack.Navigator>
   );
 }
 
