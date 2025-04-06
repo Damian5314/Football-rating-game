@@ -1,0 +1,3 @@
+Install NPM: NPM install
+Expo CLI: npm install -g expo-cli
+Start expo: npx expo start
