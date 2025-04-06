@@ -21,6 +21,15 @@ export default function App() {
             else if (route.name === 'Profile') iconName = 'person';
             return <Ionicons name={iconName} size={size} color={color} />;
           },
+          headerRight: () => (
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              style={{ marginRight: 16 }}
+              onPress={() => console.log('Notificaties geopend')}
+            />
+          ),
+          headerTitleAlign: 'left',
         })}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
