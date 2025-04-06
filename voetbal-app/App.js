@@ -1,5 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React, { useState } from 'react';
 import HomeScreen from './screens/HomeScreen';
 import LeagueScreen from './screens/LeagueScreen';
 import StoreScreen from './screens/StoreScreen';
@@ -9,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+  const [coins, setCoins] = useState(220);
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -34,7 +36,9 @@ export default function App() {
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Leagues" component={LeagueScreen} />
-        <Tab.Screen name="Store" component={StoreScreen} />
+        <Tab.Screen name="Store">
+          {() => <StoreScreen coins={coins} setCoins={setCoins} />}
+        </Tab.Screen>
         <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>
     </NavigationContainer>
