@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_KEY = '0e70c974ffmsh29d5107dbf05cb1p145d19jsn5d7af76e4a93';
+const API_KEY = '22faa5f090msh8e1f6899aecc99ep15b8f6jsn3e0124f4e69b';
 const API_HOST = 'api-football-v1.p.rapidapi.com';
 
 const api = axios.create({
