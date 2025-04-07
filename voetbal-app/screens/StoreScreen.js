@@ -1,16 +1,30 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { AuthContext } from '../context/AuthContext';
 
 export default function StoreScreen({ coins, setCoins }) {
   const [items] = useState([
-    { id: 1, label: 'Item 1', price: 200 },
-    { id: 2, label: 'Item 2', price: 250 },
-    { id: 3, label: 'Item 3', price: 150 },
-    { id: 4, label: 'Item 4', price: 300 },
+    { id: 1, label: 'Barca', price: 200 },
+    { id: 2, label: 'Real', price: 250 },
+    { id: 3, label: 'Feyenoord', price: 150 },
+    { id: 4, label: 'PSV', price: 300 },
   ]);
 
-  const buyCoins = (amount) => {
-    setCoins(coins + amount);
+  const { user } = useContext(AuthContext);
+
+  const buyCoins = async (amount) => {
+    const newTotal = coins + amount;
+    setCoins(newTotal);
+
+    try {
+      if (user) {
+        await setDoc(doc(db, 'users', user.uid), { coins: newTotal });
+      }
+    } catch (error) {
+      console.error('Fout bij opslaan van coins:', error);
+    }
   };
 
   const renderItem = ({ item }) => (
@@ -27,7 +41,7 @@ export default function StoreScreen({ coins, setCoins }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Bovenste saldo-balk */}
+      {/* Saldo-balk */}
       <View style={styles.coinBar}>
         <View style={styles.coinDisplay}>
           <Image source={require('../assets/coin.png')} style={styles.coinIcon} />
@@ -48,7 +62,7 @@ export default function StoreScreen({ coins, setCoins }) {
         </View>
       </View>
 
-      {/* Cosmetic items */}
+      {/* Lijst met cosmetics */}
       <FlatList
         data={items}
         keyExtractor={(item) => item.id.toString()}
@@ -82,7 +96,6 @@ const styles = StyleSheet.create({
   },
   buyButtons: {
     flexDirection: 'row',
-    gap: 10,
   },
   buyButton: {
     backgroundColor: '#ffe066',
@@ -116,6 +129,5 @@ const styles = StyleSheet.create({
   priceBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
 });

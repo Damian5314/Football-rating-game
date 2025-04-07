@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 import { auth } from '../firebaseConfig';
 
 export default function LoginScreen() {
@@ -13,6 +15,9 @@ export default function LoginScreen() {
     try {
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, 'users', auth.currentUser.uid), {
+          coins: 250,
+        });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
