@@ -37,3 +37,6 @@ yarn-error.*
 
 # android
 android/
+
+# env
+.env
