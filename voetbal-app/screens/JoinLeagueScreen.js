@@ -35,15 +35,17 @@ export default function JoinLeagueScreen({ navigation, route }) {
       const leagueData = leagueDoc.data()
 
       // Check if user is already a member
-      if (leagueData.members.includes(user.uid)) {
-        Alert.alert("Info", "You are already a member of this league.")
-        navigation.goBack()
+      if (leagueData.members && leagueData.members.includes(user.uid)) {
+        Alert.alert("Info", "You are already a member of this league.", [
+          { text: "OK", onPress: () => navigation.goBack() },
+        ])
         return
       }
 
       // Add user to the league members
       await updateDoc(doc(db, "leagues", leagueDoc.id), {
         members: arrayUnion(user.uid),
+        memberEmails: arrayUnion(user.email),
       })
 
       Alert.alert("Success", `You have joined the league "${leagueData.name}"!`, [
@@ -71,9 +73,14 @@ export default function JoinLeagueScreen({ navigation, route }) {
           onChangeText={setInviteCode}
           autoCapitalize="characters"
           autoCorrect={false}
+          maxLength={6}
         />
 
-        <TouchableOpacity style={styles.joinButton} onPress={joinLeague} disabled={loading}>
+        <TouchableOpacity
+          style={[styles.joinButton, !inviteCode.trim() && styles.disabledButton]}
+          onPress={joinLeague}
+          disabled={loading || !inviteCode.trim()}
+        >
           {loading ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
@@ -134,5 +141,8 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 })

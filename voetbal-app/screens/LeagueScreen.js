@@ -18,7 +18,7 @@ import { collection, addDoc, getDocs, query, where } from "firebase/firestore"
 import { db } from "../firebaseConfig"
 import { AuthContext } from "../context/AuthContext"
 
-export default function LeagueScreen() {
+export default function LeagueScreen({ navigation }) {
   const [leagues, setLeagues] = useState([])
   const [modalVisible, setModalVisible] = useState(false)
   const [newLeagueName, setNewLeagueName] = useState("")
@@ -33,35 +33,36 @@ export default function LeagueScreen() {
   const fetchLeagues = async () => {
     try {
       setLoading(true)
-      // Fetch public leagues
-      const publicLeaguesQuery = query(collection(db, "leagues"), where("isPublic", "==", true))
-      const publicLeaguesSnapshot = await getDocs(publicLeaguesQuery)
 
-      // Fetch user's private leagues
+      // Fetch user's leagues (both created by user and joined)
       const userLeaguesQuery = query(collection(db, "leagues"), where("members", "array-contains", user.uid))
       const userLeaguesSnapshot = await getDocs(userLeaguesQuery)
 
-      const publicLeaguesData = publicLeaguesSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        isPublic: true,
-      }))
+      // Fetch public leagues that user is not a member of
+      const publicLeaguesQuery = query(collection(db, "leagues"), where("isPublic", "==", true))
+      const publicLeaguesSnapshot = await getDocs(publicLeaguesQuery)
 
+      // Process user's leagues
       const userLeaguesData = userLeaguesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         isUserLeague: true,
       }))
 
-      // Combine and remove duplicates
-      const combinedLeagues = [...publicLeaguesData]
-      userLeaguesData.forEach((league) => {
-        if (!combinedLeagues.some((l) => l.id === league.id)) {
-          combinedLeagues.push(league)
-        }
-      })
+      // Process public leagues and filter out ones user is already in
+      const publicLeaguesData = publicLeaguesSnapshot.docs
+        .filter((doc) => !userLeaguesData.some((userLeague) => userLeague.id === doc.id))
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          isPublic: true,
+        }))
+
+      // Combine leagues
+      const combinedLeagues = [...userLeaguesData, ...publicLeaguesData]
 
       setLeagues(combinedLeagues)
+      console.log("Leagues loaded:", combinedLeagues.length)
     } catch (error) {
       console.error("Error fetching leagues:", error)
       Alert.alert("Error", "Failed to load leagues")
@@ -79,24 +80,33 @@ export default function LeagueScreen() {
     try {
       setLoading(true)
 
-      // Generate a unique invite code
-      const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase()
+      // Generate a unique invite code (6 characters, uppercase)
+      const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
 
       // Create new league in Firestore
       const leagueData = {
-        name: newLeagueName,
-        description: newLeagueDescription,
+        name: newLeagueName.trim(),
+        description: newLeagueDescription.trim(),
         createdBy: user.uid,
+        creatorEmail: user.email,
         createdAt: new Date(),
         members: [user.uid],
+        memberEmails: [user.email],
         inviteCode: inviteCode,
         isPublic: false,
       }
 
       const docRef = await addDoc(collection(db, "leagues"), leagueData)
+      console.log("League created with ID:", docRef.id)
 
       // Add the new league to the state
-      setLeagues([...leagues, { id: docRef.id, ...leagueData, isUserLeague: true }])
+      const newLeague = {
+        id: docRef.id,
+        ...leagueData,
+        isUserLeague: true,
+      }
+
+      setLeagues([newLeague, ...leagues])
 
       // Close modal and reset form
       setModalVisible(false)
@@ -104,10 +114,10 @@ export default function LeagueScreen() {
       setNewLeagueDescription("")
 
       // Show success message with invite option
-      Alert.alert("League Created", "Your league has been created successfully!", [
+      Alert.alert("League Created", `Your league "${newLeagueName}" has been created successfully!`, [
         { text: "OK" },
         {
-          text: "Share Invite Link",
+          text: "Share Invite Code",
           onPress: () => shareInviteLink(inviteCode, newLeagueName),
         },
       ])
@@ -121,15 +131,11 @@ export default function LeagueScreen() {
 
   const shareInviteLink = async (inviteCode, leagueName) => {
     try {
-      // Create a shareable link (in a real app, this would be a deep link)
-      const inviteLink = `voetbalapp://join-league/${inviteCode}`
-
       await Share.share({
-        message: `Join my league "${leagueName}" in the Voetbal App! Use code: ${inviteCode} or click this link: ${inviteLink}`,
+        message: `Join my league "${leagueName}" in the Voetbal App! Use invite code: ${inviteCode}`,
       })
     } catch (error) {
       console.error("Error sharing invite link:", error)
-      Alert.alert("Error", "Failed to share invite link")
     }
   }
 
@@ -137,20 +143,36 @@ export default function LeagueScreen() {
     <TouchableOpacity
       style={styles.leagueItem}
       onPress={() => {
-        /* Navigate to league details */
+        /* Navigate to league details in the future */
+        Alert.alert("League Selected", `You selected ${item.name}`)
       }}
     >
       <View style={styles.leagueInfo}>
         <Text style={styles.leagueName}>{item.name}</Text>
-        <Text style={styles.leagueDescription}>{item.description}</Text>
-        {item.isUserLeague && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>My League</Text>
-          </View>
-        )}
+        {item.description ? <Text style={styles.leagueDescription}>{item.description}</Text> : null}
+
+        <View style={styles.badgeContainer}>
+          {item.createdBy === user.uid && (
+            <View style={[styles.badge, styles.ownerBadge]}>
+              <Text style={styles.badgeText}>Owner</Text>
+            </View>
+          )}
+
+          {item.isUserLeague && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Member</Text>
+            </View>
+          )}
+
+          {item.isPublic && !item.isUserLeague && (
+            <View style={[styles.badge, styles.publicBadge]}>
+              <Text style={styles.badgeText}>Public</Text>
+            </View>
+          )}
+        </View>
       </View>
 
-      {item.isUserLeague && (
+      {item.createdBy === user.uid && (
         <TouchableOpacity style={styles.shareButton} onPress={() => shareInviteLink(item.inviteCode, item.name)}>
           <Ionicons name="share-outline" size={20} color="#007AFF" />
         </TouchableOpacity>
@@ -162,14 +184,17 @@ export default function LeagueScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Leagues</Text>
-        <TouchableOpacity style={styles.createButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={24} color="white" />
-          <Text style={styles.createButtonText}>Create League</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.joinButton} onPress={() => navigation.navigate("JoinLeague")}>
-          <Ionicons name="enter-outline" size={24} color="white" />
-          <Text style={styles.joinButtonText}>Join</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.joinButton} onPress={() => navigation.navigate("JoinLeague")}>
+            <Ionicons name="enter-outline" size={20} color="white" />
+            <Text style={styles.joinButtonText}>Join</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.createButton} onPress={() => setModalVisible(true)}>
+            <Ionicons name="add" size={20} color="white" />
+            <Text style={styles.createButtonText}>Create</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading && leagues.length === 0 ? (
@@ -180,12 +205,14 @@ export default function LeagueScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderLeagueItem}
           contentContainerStyle={styles.listContainer}
+          refreshing={loading}
+          onRefresh={fetchLeagues}
         />
       ) : (
         <View style={styles.emptyState}>
           <Ionicons name="trophy-outline" size={60} color="#ccc" />
           <Text style={styles.emptyStateText}>No leagues found</Text>
-          <Text style={styles.emptyStateSubtext}>Create your first league to get started!</Text>
+          <Text style={styles.emptyStateSubtext}>Create your first league or join an existing one!</Text>
         </View>
       )}
 
@@ -205,6 +232,7 @@ export default function LeagueScreen() {
               placeholder="League Name"
               value={newLeagueName}
               onChangeText={setNewLeagueName}
+              maxLength={30}
             />
 
             <TextInput
@@ -213,20 +241,25 @@ export default function LeagueScreen() {
               value={newLeagueDescription}
               onChangeText={setNewLeagueDescription}
               multiline
+              maxLength={100}
             />
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
+                onPress={() => {
+                  setModalVisible(false)
+                  setNewLeagueName("")
+                  setNewLeagueDescription("")
+                }}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalButton, styles.createModalButton]}
+                style={[styles.modalButton, styles.createModalButton, !newLeagueName.trim() && styles.disabledButton]}
                 onPress={createLeague}
-                disabled={loading}
+                disabled={loading || !newLeagueName.trim()}
               >
                 {loading ? (
                   <ActivityIndicator size="small" color="white" />
@@ -261,6 +294,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  headerButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
   createButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -270,6 +307,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   createButtonText: {
+    color: "white",
+    marginLeft: 4,
+    fontWeight: "600",
+  },
+  joinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  joinButtonText: {
     color: "white",
     marginLeft: 4,
     fontWeight: "600",
@@ -302,12 +352,22 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 8,
   },
+  badgeContainer: {
+    flexDirection: "row",
+    gap: 8,
+  },
   badge: {
     backgroundColor: "#E1F5FE",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
     alignSelf: "flex-start",
+  },
+  ownerBadge: {
+    backgroundColor: "#FFF3E0",
+  },
+  publicBadge: {
+    backgroundColor: "#E8F5E9",
   },
   badgeText: {
     color: "#0288D1",
@@ -402,18 +462,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
-  joinButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4CAF50",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 8,
-  },
-  joinButtonText: {
-    color: "white",
-    marginLeft: 4,
-    fontWeight: "600",
+  disabledButton: {
+    opacity: 0.5,
   },
 })

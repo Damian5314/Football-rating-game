@@ -1,4 +1,5 @@
 "use client"
+
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import LeagueScreen from "./LeagueScreen"
 import JoinLeagueScreen from "./JoinLeagueScreen"
