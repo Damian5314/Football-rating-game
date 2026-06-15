@@ -9,13 +9,15 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { getTodayMatches } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { subscribePredictions } from '../services/predictionService';
+import { colors, spacing, radius, shadow } from '../theme';
 
 const statusBadge = (statusType) => {
-  if (statusType === 'inprogress') return { label: 'LIVE', color: '#e53935' };
-  if (statusType === 'finished') return { label: 'AFGELOPEN', color: '#888' };
+  if (statusType === 'inprogress') return { label: 'LIVE', color: colors.live };
+  if (statusType === 'finished') return { label: 'AFGELOPEN', color: colors.muted };
   return null;
 };
 
@@ -130,7 +132,7 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="green" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -141,11 +143,13 @@ export default function HomeScreen({ navigation }) {
         data={matches}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListEmptyComponent={
-          <View style={styles.centered}>
+          <View style={styles.emptyBox}>
+            <Ionicons name="calendar-outline" size={48} color={colors.border} />
             <Text style={styles.empty}>
               {error || 'Geen wedstrijden vandaag in de gevolgde competities.'}
             </Text>
@@ -157,32 +161,38 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 8 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+  container: { flex: 1, backgroundColor: colors.bg },
+  listContent: { padding: spacing.md, flexGrow: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, gap: spacing.md },
   card: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    ...shadow,
   },
   row: { flexDirection: 'row', alignItems: 'center' },
   team: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   teamRight: { justifyContent: 'flex-end' },
-  teamName: { flexShrink: 1, fontSize: 15 },
-  logo: { width: 26, height: 26, resizeMode: 'contain' },
+  teamName: { flexShrink: 1, fontSize: 15, color: colors.text, fontWeight: '500' },
+  logo: { width: 28, height: 28, resizeMode: 'contain' },
   center: { alignItems: 'center', paddingHorizontal: 10, minWidth: 64 },
-  score: { fontSize: 18, fontWeight: 'bold' },
-  vs: { fontSize: 14, color: '#aaa' },
-  time: { fontSize: 12, color: 'gray', marginTop: 2 },
+  score: { fontSize: 20, fontWeight: '800', color: colors.text },
+  vs: { fontSize: 14, color: colors.muted },
+  time: { fontSize: 12, color: colors.muted, marginTop: 2 },
   meta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.bg,
   },
-  league: { fontSize: 12, fontWeight: '600', color: '#444' },
+  league: { fontSize: 12, fontWeight: '700', color: colors.muted },
   metaRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  predBadge: { fontSize: 11, fontWeight: 'bold', color: '#2e7d32' },
-  statusBadge: { fontSize: 11, fontWeight: 'bold' },
-  empty: { color: 'gray', textAlign: 'center' },
+  predBadge: { fontSize: 11, fontWeight: '800', color: colors.primary },
+  statusBadge: { fontSize: 11, fontWeight: '800' },
+  empty: { color: colors.muted, textAlign: 'center' },
 });

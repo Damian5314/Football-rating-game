@@ -66,7 +66,7 @@ export default function PredictionsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="green" />
+        <ActivityIndicator size="large" color="#15803D" />
       </View>
     );
   }
@@ -110,6 +110,6 @@ const styles = StyleSheet.create({
   actualText: { fontSize: 14, color: '#333' },
   pending: { fontSize: 13, color: '#999', fontStyle: 'italic' },
   points: { marginTop: 8, fontWeight: 'bold', fontSize: 15 },
-  good: { color: '#2e7d32' },
+  good: { color: '#15803D' },
   zero: { color: '#999' },
 });

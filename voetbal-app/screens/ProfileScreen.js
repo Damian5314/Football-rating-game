@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fafafa',
   },
-  statNumber: { fontSize: 26, fontWeight: 'bold', color: '#2e7d32' },
+  statNumber: { fontSize: 26, fontWeight: 'bold', color: '#15803D' },
   statLabel: { marginTop: 4, color: 'gray' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 30 },
   modalBox: { backgroundColor: '#fff', borderRadius: 14, padding: 20 },
@@ -156,5 +156,5 @@ const styles = StyleSheet.create({
   modalInput: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, fontSize: 16 },
   modalButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 24, marginTop: 16 },
   modalCancel: { color: '#888', fontSize: 15 },
-  modalSave: { color: '#2e7d32', fontSize: 15, fontWeight: 'bold' },
+  modalSave: { color: '#15803D', fontSize: 15, fontWeight: 'bold' },
 });

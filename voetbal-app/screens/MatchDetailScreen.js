@@ -11,6 +11,7 @@ import { AuthContext } from '../context/AuthContext';
 import { teamLogo } from '../services/api';
 import { savePrediction, getPrediction } from '../services/predictionService';
 import { scorePrediction, SCORING } from '../services/gameConfig';
+import { colors } from '../theme';
 
 function Stepper({ label, value, setValue, disabled }) {
   const change = (delta) =>
@@ -96,7 +97,7 @@ export default function MatchDetailScreen({ route, navigation }) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="green" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
   stepperLabel: { fontSize: 12, color: '#666', marginBottom: 6, textAlign: 'center' },
   stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#2e7d32',
+    width: 40, height: 40, borderRadius: 20, backgroundColor: '#15803D',
     justifyContent: 'center', alignItems: 'center',
   },
   stepBtnDisabled: { backgroundColor: '#ccc' },
@@ -229,13 +230,13 @@ const styles = StyleSheet.create({
   stepValue: { fontSize: 24, fontWeight: 'bold', minWidth: 28, textAlign: 'center' },
   hint: { textAlign: 'center', color: '#888', fontSize: 12, marginTop: 16 },
   saveBtn: {
-    backgroundColor: '#2e7d32', borderRadius: 12, paddingVertical: 14,
+    backgroundColor: '#15803D', borderRadius: 12, paddingVertical: 14,
     alignItems: 'center', marginTop: 20,
   },
   saveBtnDisabled: { opacity: 0.6 },
   saveText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   resultLine: { fontSize: 15, textAlign: 'center', marginVertical: 4 },
   points: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginTop: 10 },
-  pointsGood: { color: '#2e7d32' },
+  pointsGood: { color: '#15803D' },
   pointsZero: { color: '#999' },
 });

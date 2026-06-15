@@ -158,8 +158,8 @@ const styles = StyleSheet.create({
   btnBuyText: { fontWeight: 'bold' },
   btnCoin: { width: 16, height: 16, marginRight: 6 },
   btnDisabled: { opacity: 0.4 },
-  btnEquip: { backgroundColor: '#2e7d32' },
+  btnEquip: { backgroundColor: '#15803D' },
   btnEquipText: { color: '#fff', fontWeight: 'bold' },
-  btnEquipped: { backgroundColor: '#e8f5e9', borderWidth: 1, borderColor: '#2e7d32' },
-  btnEquippedText: { color: '#2e7d32', fontWeight: 'bold' },
+  btnEquipped: { backgroundColor: '#e8f5e9', borderWidth: 1, borderColor: '#15803D' },
+  btnEquippedText: { color: '#15803D', fontWeight: 'bold' },
 });
