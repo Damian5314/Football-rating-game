@@ -1,6 +1,6 @@
 // Firebase initialisatie
 import { Platform } from 'react-native';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,18 +25,24 @@ const firebaseConfig = {
   measurementId: FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Hergebruik de bestaande app bij hot-reload (anders: "app already exists").
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 // Auth met persistence: op native via AsyncStorage (login onthouden na herstart),
 // op web de standaard browser-persistence. getAnalytics is bewust weggelaten
-// (werkt niet in React Native en crasht daar).
+// (werkt niet in React Native en crasht daar). De try/catch vangt een dubbele
+// initialisatie bij Fast Refresh op.
 let auth;
 if (Platform.OS === 'web') {
   auth = getAuth(app);
 } else {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-  });
+  try {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+    });
+  } catch (e) {
+    auth = getAuth(app);
+  }
 }
 
 const db = getFirestore(app);
