@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { getTodayMatches } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+import { subscribePredictions } from '../services/predictionService';
 
 const statusBadge = (statusType) => {
   if (statusType === 'inprogress') return { label: 'LIVE', color: '#e53935' };
@@ -18,7 +20,9 @@ const statusBadge = (statusType) => {
 };
 
 export default function HomeScreen({ navigation }) {
+  const { user } = useContext(AuthContext);
   const [matches, setMatches] = useState([]);
+  const [predictions, setPredictions] = useState({}); // fixtureId -> prediction
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -41,6 +45,19 @@ export default function HomeScreen({ navigation }) {
     fetchMatches();
   }, [fetchMatches]);
 
+  // Live overzicht van eigen voorspellingen (om een badge te tonen).
+  useEffect(() => {
+    if (!user) return;
+    const unsub = subscribePredictions(user.uid, (list) => {
+      const map = {};
+      list.forEach((p) => {
+        map[p.fixtureId] = p;
+      });
+      setPredictions(map);
+    });
+    return unsub;
+  }, [user]);
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchMatches();
@@ -53,6 +70,7 @@ export default function HomeScreen({ navigation }) {
     });
     const badge = statusBadge(item.statusType);
     const showScore = item.statusType !== 'notstarted';
+    const pred = predictions[item.id];
 
     return (
       <TouchableOpacity
@@ -92,11 +110,18 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.meta}>
           <Text style={styles.league}>{item.tournamentName}</Text>
-          {badge && (
-            <Text style={[styles.statusBadge, { color: badge.color }]}>
-              {badge.label}
-            </Text>
-          )}
+          <View style={styles.metaRight}>
+            {pred && (
+              <Text style={styles.predBadge}>
+                ✓ {pred.homeScore}-{pred.awayScore}
+              </Text>
+            )}
+            {badge && (
+              <Text style={[styles.statusBadge, { color: badge.color }]}>
+                {badge.label}
+              </Text>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -156,6 +181,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   league: { fontSize: 12, fontWeight: '600', color: '#444' },
+  metaRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  predBadge: { fontSize: 11, fontWeight: 'bold', color: '#2e7d32' },
   statusBadge: { fontSize: 11, fontWeight: 'bold' },
   empty: { color: 'gray', textAlign: 'center' },
 });
