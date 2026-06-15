@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
 import { useState } from 'react';
 
-export default function StoreScreen({ coins, setCoins }) {
+export default function StoreScreen() {
+  const [coins, setCoins] = useState(220);
   const [items] = useState([
     { id: 1, label: 'Item 1', price: 200 },
     { id: 2, label: 'Item 2', price: 250 },
