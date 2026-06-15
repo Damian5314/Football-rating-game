@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Plak deze rules in de Firebase Console > Firestore Database > Rules,
+// of deploy met de Firebase CLI (`firebase deploy --only firestore:rules`).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Gebruikersprofielen.
+    // - Iedere ingelogde gebruiker mag profielen LEZEN (nodig voor leaderboard/vrienden).
+    // - Alleen de eigenaar mag zijn eigen profiel AANMAKEN/WIJZIGEN.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+
+      // Voorspellingen staan onder de gebruiker; alleen de eigenaar komt erbij.
+      match /predictions/{fixtureId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // NB: bij client-side scoring (Fase 3) schrijft de client zelf coins/points.
+    // Voor echte anti-cheat verplaats je dat naar een Cloud Function en sta je
+    // hier alleen schrijven van coins/points toe vanaf de server (admin SDK).
+  }
+}

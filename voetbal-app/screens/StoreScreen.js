@@ -1,8 +1,9 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { UserContext } from '../context/UserContext';
 
 export default function StoreScreen() {
-  const [coins, setCoins] = useState(220);
+  const { coins, addCoins } = useContext(UserContext);
   const [items] = useState([
     { id: 1, label: 'Item 1', price: 200 },
     { id: 2, label: 'Item 2', price: 250 },
@@ -10,9 +11,8 @@ export default function StoreScreen() {
     { id: 4, label: 'Item 4', price: 300 },
   ]);
 
-  const buyCoins = (amount) => {
-    setCoins(coins + amount);
-  };
+  // Tijdelijke test-knoppen om coins te krijgen (vervangen in Fase 4 door echte aankopen).
+  const buyCoins = (amount) => addCoins(amount);
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>

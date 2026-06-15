@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { UserProvider } from './context/UserContext';
 import HomeScreen from './screens/HomeScreen';
 import MatchDetailScreen from './screens/MatchDetailScreen';
 import LeagueScreen from './screens/LeagueScreen';
@@ -77,7 +78,13 @@ function Root() {
     );
   }
 
-  return user ? <MainTabs /> : <LoginScreen />;
+  return user ? (
+    <UserProvider>
+      <MainTabs />
+    </UserProvider>
+  ) : (
+    <LoginScreen />
+  );
 }
 
 export default function App() {
