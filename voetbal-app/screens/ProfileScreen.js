@@ -6,6 +6,7 @@ import FriendScreen from './ProfileButtons/FriendScreen';
 import PredictionsScreen from './ProfileButtons/PredictionScreen';
 import { UserContext } from '../context/UserContext';
 import { getCosmeticById } from '../services/cosmetics';
+import { headerOptions } from '../components/HeaderRight';
 
 function ProfileScreenContent({ navigation }) {
   const { profile, loadingProfile, equipped, updateProfile } = useContext(UserContext);
@@ -112,8 +113,8 @@ const Stack = createNativeStackNavigator();
 
 export default function ProfileScreen() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Profile" component={ProfileScreenContent} options={{ headerShown: false }} />
+    <Stack.Navigator screenOptions={headerOptions}>
+      <Stack.Screen name="Profile" component={ProfileScreenContent} options={{ title: 'Profiel' }} />
       <Stack.Screen name="Predictions" component={PredictionsScreen} options={{ title: 'Voorspellingen' }} />
       <Stack.Screen name="Friends" component={FriendScreen} options={{ title: 'Vrienden' }} />
     </Stack.Navigator>
@@ -121,7 +122,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingTop: 40, paddingHorizontal: 20, paddingBottom: 40, backgroundColor: '#fff' },
+  container: { paddingTop: 16, paddingHorizontal: 20, paddingBottom: 40, backgroundColor: '#fff' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   profileImage: { alignItems: 'center', marginVertical: 20 },
   avatarWrap: {
