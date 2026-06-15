@@ -6,6 +6,7 @@ import {
   changeCoins,
   updateUserProfile,
 } from '../services/userService';
+import { settlePredictions } from '../services/scoringService';
 
 export const UserContext = createContext();
 
@@ -33,6 +34,11 @@ export const UserProvider = ({ children }) => {
           setProfile(data);
           setLoadingProfile(false);
         });
+        // Afgelopen voorspellingen afrekenen (punten + coins). Fire-and-forget;
+        // het profiel-abonnement hierboven toont de nieuwe stand vanzelf.
+        settlePredictions(user.uid).catch((e) =>
+          console.error('Afrekenen mislukt:', e)
+        );
       } catch (e) {
         console.error('Profiel laden mislukt:', e);
         setLoadingProfile(false);
