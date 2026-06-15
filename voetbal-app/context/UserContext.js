@@ -5,6 +5,8 @@ import {
   subscribeUserProfile,
   changeCoins,
   updateUserProfile,
+  buyCosmetic,
+  equipCosmetic,
 } from '../services/userService';
 import { settlePredictions } from '../services/scoringService';
 
@@ -51,14 +53,31 @@ export const UserProvider = ({ children }) => {
     };
   }, [user]);
 
+  const ownedCosmetics = profile?.ownedCosmetics ?? [];
+  const equipped = profile?.equipped ?? {};
+
   const value = {
     profile,
     loadingProfile,
     coins: profile?.coins ?? 0,
     points: profile?.points ?? 0,
+    ownedCosmetics,
+    equipped,
     // Helpers (uid veilig afgeleid van de ingelogde gebruiker)
     addCoins: (delta) => user && changeCoins(user.uid, delta),
     updateProfile: (data) => user && updateUserProfile(user.uid, data),
+    // Koop een cosmetic als je 'm nog niet hebt én genoeg coins hebt.
+    purchaseCosmetic: (cosmetic) => {
+      if (!user) return Promise.reject(new Error('Niet ingelogd'));
+      if (ownedCosmetics.includes(cosmetic.id)) {
+        return Promise.reject(new Error('Al in bezit'));
+      }
+      if ((profile?.coins ?? 0) < cosmetic.price) {
+        return Promise.reject(new Error('Niet genoeg coins'));
+      }
+      return buyCosmetic(user.uid, cosmetic.id, cosmetic.price);
+    },
+    equip: (type, cosmeticId) => user && equipCosmetic(user.uid, type, cosmeticId),
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

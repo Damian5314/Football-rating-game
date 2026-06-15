@@ -1,122 +1,165 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
-import { useState, useContext } from 'react';
+import { useContext } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { UserContext } from '../context/UserContext';
+import { COSMETIC_TYPES, cosmeticsByType } from '../services/cosmetics';
 
-export default function StoreScreen() {
-  const { coins, addCoins } = useContext(UserContext);
-  const [items] = useState([
-    { id: 1, label: 'Item 1', price: 200 },
-    { id: 2, label: 'Item 2', price: 250 },
-    { id: 3, label: 'Item 3', price: 150 },
-    { id: 4, label: 'Item 4', price: 300 },
-  ]);
+// Visuele preview per cosmetic-type.
+function Preview({ item }) {
+  if (item.type === 'avatarFrame') {
+    return <View style={[styles.framePreview, { borderColor: item.value }]} />;
+  }
+  if (item.type === 'nameColor') {
+    return <Text style={[styles.namePreview, { color: item.value }]}>Naam</Text>;
+  }
+  // badge of character → emoji
+  return <Text style={styles.emojiPreview}>{item.value}</Text>;
+}
 
-  // Tijdelijke test-knoppen om coins te krijgen (vervangen in Fase 4 door echte aankopen).
-  const buyCoins = (amount) => addCoins(amount);
+function CosmeticCard({ item }) {
+  const { coins, ownedCosmetics, equipped, purchaseCosmetic, equip } =
+    useContext(UserContext);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <View style={styles.starBox}>
-        <Text>⭐</Text>
-      </View>
-      <View style={styles.priceBox}>
-        <Image source={require('../assets/coin.png')} style={styles.coinIcon} />
-        <Text>{item.price}</Text>
-      </View>
-    </View>
-  );
+  const owned = ownedCosmetics.includes(item.id);
+  const isEquipped = equipped[item.type] === item.id;
+  const canAfford = coins >= item.price;
+
+  const handleBuy = async () => {
+    try {
+      await purchaseCosmetic(item);
+      Alert.alert('Gekocht!', `${item.name} is van jou.`);
+    } catch (e) {
+      Alert.alert('Oeps', e.message || 'Kopen mislukt');
+    }
+  };
+
+  const handleEquip = () => equip(item.type, isEquipped ? null : item.id);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Bovenste saldo-balk */}
-      <View style={styles.coinBar}>
-        <View style={styles.coinDisplay}>
-          <Image source={require('../assets/coin.png')} style={styles.coinIcon} />
-          <Text style={styles.coinText}>{coins}</Text>
-        </View>
+    <View style={styles.card}>
+      <View style={styles.previewBox}>
+        <Preview item={item} />
+      </View>
+      <Text style={styles.cardName} numberOfLines={1}>
+        {item.name}
+      </Text>
 
-        {/* Koopknoppen */}
-        <View style={styles.buyButtons}>
-          {[100, 500, 1000].map((amount) => (
-            <TouchableOpacity
-              key={amount}
-              style={styles.buyButton}
-              onPress={() => buyCoins(amount)}
-            >
-              <Text style={styles.buyText}>+{amount}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+      {owned ? (
+        <TouchableOpacity
+          style={[styles.btn, isEquipped ? styles.btnEquipped : styles.btnEquip]}
+          onPress={handleEquip}
+        >
+          <Text style={isEquipped ? styles.btnEquippedText : styles.btnEquipText}>
+            {isEquipped ? 'Uitgerust ✓' : 'Uitrusten'}
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={[styles.btn, styles.btnBuy, !canAfford && styles.btnDisabled]}
+          onPress={handleBuy}
+          disabled={!canAfford}
+        >
+          <Image source={require('../assets/coin.png')} style={styles.btnCoin} />
+          <Text style={styles.btnBuyText}>{item.price}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+export default function StoreScreen() {
+  const { coins } = useContext(UserContext);
+
+  return (
+    <View style={styles.container}>
+      {/* Saldo-balk */}
+      <View style={styles.coinBar}>
+        <Image source={require('../assets/coin.png')} style={styles.coinIcon} />
+        <Text style={styles.coinText}>{coins}</Text>
+        <Text style={styles.coinHint}>Verdien coins door wedstrijden te voorspellen</Text>
       </View>
 
-      {/* Cosmetic items */}
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={{ padding: 20 }}
-      />
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {Object.entries(COSMETIC_TYPES).map(([type, label]) => (
+          <View key={type} style={styles.section}>
+            <Text style={styles.sectionTitle}>{label}</Text>
+            <View style={styles.grid}>
+              {cosmeticsByType(type).map((item) => (
+                <CosmeticCard key={item.id} item={item} />
+              ))}
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff' },
   coinBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#eee',
     backgroundColor: '#f9f9f9',
+    flexWrap: 'wrap',
   },
-  coinDisplay: {
-    flexDirection: 'row',
+  coinIcon: { width: 22, height: 22, marginRight: 8 },
+  coinText: { fontSize: 20, fontWeight: 'bold', marginRight: 12 },
+  coinHint: { color: '#888', fontSize: 12, flexShrink: 1 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 12, color: '#333' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  card: {
+    width: '47%',
+    backgroundColor: '#fafafa',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#eee',
+    padding: 14,
+    alignItems: 'center',
+  },
+  previewBox: {
+    width: 64,
+    height: 64,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
-  coinIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 6,
+  framePreview: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 4,
+    backgroundColor: '#e0e0e0',
   },
-  coinText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  buyButtons: {
+  emojiPreview: { fontSize: 40 },
+  namePreview: { fontSize: 20, fontWeight: 'bold' },
+  cardName: { fontSize: 13, fontWeight: '600', marginBottom: 10, textAlign: 'center' },
+  btn: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  buyButton: {
-    backgroundColor: '#ffe066',
-    borderRadius: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
-  },
-  buyText: {
-    fontWeight: 'bold',
-  },
-  item: {
-    padding: 12,
-    marginBottom: 12,
-    backgroundColor: '#f2f2f2',
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  starBox: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#fff',
     justifyContent: 'center',
-    alignItems: 'center',
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    minWidth: 90,
   },
-  priceBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+  btnBuy: { backgroundColor: '#ffe066' },
+  btnBuyText: { fontWeight: 'bold' },
+  btnCoin: { width: 16, height: 16, marginRight: 6 },
+  btnDisabled: { opacity: 0.4 },
+  btnEquip: { backgroundColor: '#2e7d32' },
+  btnEquipText: { color: '#fff', fontWeight: 'bold' },
+  btnEquipped: { backgroundColor: '#e8f5e9', borderWidth: 1, borderColor: '#2e7d32' },
+  btnEquippedText: { color: '#2e7d32', fontWeight: 'bold' },
 });

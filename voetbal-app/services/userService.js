@@ -6,6 +6,7 @@ import {
   onSnapshot,
   updateDoc,
   increment,
+  arrayUnion,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
@@ -59,3 +60,15 @@ export const awardPointsAndCoins = (uid, points, coins) =>
     coins: increment(coins),
     'stats.correctPredictions': increment(points > 0 ? 1 : 0),
   });
+
+// Cosmetic kopen: voeg toe aan bezit en trek de prijs van de coins af.
+// (Affordability/bezit-check gebeurt in de UI vóór deze call.)
+export const buyCosmetic = (uid, cosmeticId, price) =>
+  updateDoc(userRef(uid), {
+    ownedCosmetics: arrayUnion(cosmeticId),
+    coins: increment(-price),
+  });
+
+// Cosmetic uitrusten of weghalen (cosmeticId = null om te verwijderen).
+export const equipCosmetic = (uid, type, cosmeticId) =>
+  updateDoc(userRef(uid), { [`equipped.${type}`]: cosmeticId });
