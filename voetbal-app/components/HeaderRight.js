@@ -3,9 +3,9 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import { UserContext } from '../context/UserContext';
-import { colors } from '../theme';
+import { colors, fonts } from '../theme';
 
-// Coin-saldo + uitloggen rechtsboven; gedeeld door alle stack-headers.
+// Coin-saldo (gouden pill) + uitloggen rechtsboven; gedeeld door alle headers.
 export function HeaderRight() {
   const { logout } = useContext(AuthContext);
   const { coins } = useContext(UserContext);
@@ -15,7 +15,7 @@ export function HeaderRight() {
         <Image source={require('../assets/coin.png')} style={styles.coinIcon} />
         <Text style={styles.coinText}>{coins}</Text>
       </View>
-      <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+      <TouchableOpacity onPress={logout} style={styles.logoutBtn} hitSlop={8}>
         <Ionicons name="log-out-outline" size={24} color={colors.muted} />
       </TouchableOpacity>
     </View>
@@ -25,23 +25,24 @@ export function HeaderRight() {
 // Gedeelde header-stijl voor alle stack-navigators.
 export const headerOptions = {
   headerStyle: { backgroundColor: colors.card },
-  headerTitleStyle: { fontWeight: '800', color: colors.text },
-  headerTintColor: colors.text,
+  headerShadowVisible: false,
+  headerTitleStyle: { fontFamily: fonts.headingBold, color: colors.ink, fontSize: 20 },
+  headerTintColor: colors.ink,
   headerRight: () => <HeaderRight />,
 };
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', marginRight: 12 },
-  logoutBtn: { padding: 6, marginLeft: 4 },
+  logoutBtn: { padding: 6, marginLeft: 6 },
   coinPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.coinSoft,
     borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    gap: 6,
   },
-  coinIcon: { width: 16, height: 16 },
-  coinText: { fontWeight: '800', color: colors.primaryDark },
+  coinIcon: { width: 18, height: 18 },
+  coinText: { fontFamily: fonts.bodyExtra, color: '#9A6B00', fontSize: 14 },
 });

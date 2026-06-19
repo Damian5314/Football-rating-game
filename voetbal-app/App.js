@@ -1,10 +1,23 @@
 import 'react-native-gesture-handler';
-import React, { useContext } from 'react';
+import React, { useContext, useCallback } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as SplashScreen from 'expo-splash-screen';
+import {
+  useFonts,
+  Fredoka_500Medium,
+  Fredoka_600SemiBold,
+  Fredoka_700Bold,
+} from '@expo-google-fonts/fredoka';
+import {
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+} from '@expo-google-fonts/nunito';
 
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { UserProvider } from './context/UserContext';
@@ -15,7 +28,9 @@ import StoreScreen from './screens/StoreScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import LoginScreen from './screens/LoginScreen';
 import { headerOptions } from './components/HeaderRight';
-import { colors } from './theme';
+import { colors, fonts } from './theme';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -52,7 +67,7 @@ function MainTabs() {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          headerShown: false, // elke tab heeft zijn eigen stack-header
+          headerShown: false,
           tabBarIcon: ({ color, size, focused }) => {
             let iconName;
             if (route.name === 'Home') iconName = focused ? 'football' : 'football-outline';
@@ -63,6 +78,14 @@ function MainTabs() {
           },
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.muted,
+          tabBarLabelStyle: { fontFamily: fonts.bodyMed, fontSize: 11 },
+          tabBarStyle: {
+            backgroundColor: colors.card,
+            borderTopColor: colors.border,
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 6,
+          },
         })}
       >
         <Tab.Screen name="Home" component={HomeStackNavigator} options={{ tabBarLabel: 'Home' }} />
@@ -95,10 +118,28 @@ function Root() {
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    Fredoka_500Medium,
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+  });
+
+  const onReady = useCallback(() => {
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
-    <AuthProvider>
-      <Root />
-    </AuthProvider>
+    <View style={{ flex: 1 }} onLayout={onReady}>
+      <AuthProvider>
+        <Root />
+      </AuthProvider>
+    </View>
   );
 }
 

@@ -12,9 +12,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
-import { colors, spacing, radius, shadow } from '../theme';
+import { colors, fonts, spacing, radius, shadow } from '../theme';
 
-// Firebase-foutcodes omzetten naar leesbare NL-tekst.
 const friendlyError = (code) => {
   switch (code) {
     case 'auth/invalid-email':
@@ -38,6 +37,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -66,9 +66,14 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      {/* Decoratieve stippen */}
+      <View style={[styles.dot, { backgroundColor: colors.coin, top: 90, left: 40 }]} />
+      <View style={[styles.dot, { backgroundColor: colors.live, top: 150, right: 70 }]} />
+      <View style={[styles.dot, { backgroundColor: colors.primary, top: 210, right: 40 }]} />
+
       <View style={styles.logoWrap}>
-        <View style={styles.logoCircle}>
-          <Ionicons name="football" size={44} color={colors.white} />
+        <View style={styles.logoTile}>
+          <Ionicons name="football" size={46} color={colors.white} />
         </View>
         <Text style={styles.appName}>Voorspel & Win</Text>
         <Text style={styles.tagline}>Raad de uitslag, verdien coins</Text>
@@ -97,10 +102,13 @@ export default function LoginScreen() {
             placeholder="Wachtwoord"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={!showPw}
             style={styles.input}
             placeholderTextColor={colors.muted}
           />
+          <TouchableOpacity onPress={() => setShowPw(!showPw)} hitSlop={8}>
+            <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.muted} />
+          </TouchableOpacity>
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -109,21 +117,18 @@ export default function LoginScreen() {
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleAuth}
           disabled={loading}
+          activeOpacity={0.85}
         >
           {loading ? (
             <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.buttonText}>
-              {isRegistering ? 'Registreren' : 'Log in'}
-            </Text>
+            <Text style={styles.buttonText}>{isRegistering ? 'Registreren' : 'Log in'}</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => { setIsRegistering(!isRegistering); setError(''); }}>
           <Text style={styles.switch}>
-            {isRegistering
-              ? 'Heb je al een account? Log in'
-              : 'Nog geen account? Registreer'}
+            {isRegistering ? 'Heb je al een account? Log in' : 'Nog geen account? Registreer'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -132,51 +137,42 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: spacing.xl,
-    backgroundColor: colors.bg,
-  },
+  container: { flex: 1, justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.bg },
+  dot: { position: 'absolute', width: 12, height: 12, borderRadius: 6, opacity: 0.7 },
   logoWrap: { alignItems: 'center', marginBottom: spacing.xl },
-  logoCircle: {
-    width: 84,
-    height: 84,
-    borderRadius: radius.pill,
+  logoTile: {
+    width: 92,
+    height: 92,
+    borderRadius: radius.xl,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadow,
   },
-  appName: { fontSize: 24, fontWeight: '800', color: colors.text, marginTop: spacing.md },
-  tagline: { fontSize: 14, color: colors.muted, marginTop: 4 },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    ...shadow,
-  },
-  title: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: spacing.lg },
+  appName: { fontFamily: fonts.headingBold, fontSize: 28, color: colors.ink, marginTop: spacing.md },
+  tagline: { fontFamily: fonts.body, fontSize: 14, color: colors.muted, marginTop: 2 },
+  card: { backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.xl, ...shadow },
+  title: { fontFamily: fonts.headingBold, fontSize: 22, color: colors.ink, marginBottom: spacing.lg },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.bg,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.md,
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: colors.text },
-  error: { color: colors.live, marginBottom: spacing.sm },
+  input: { flex: 1, paddingVertical: 13, fontSize: 15, color: colors.ink, fontFamily: fonts.body },
+  error: { color: colors.live, marginBottom: spacing.sm, fontFamily: fonts.bodyMed },
   button: {
     backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 14,
+    borderRadius: radius.pill,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: spacing.sm,
+    ...shadow,
   },
   buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  switch: { color: colors.primary, marginTop: spacing.lg, textAlign: 'center', fontWeight: '600' },
+  buttonText: { color: colors.white, fontSize: 16, fontFamily: fonts.bodyExtra },
+  switch: { color: colors.primaryDark, marginTop: spacing.lg, textAlign: 'center', fontFamily: fonts.bodyBold },
 });
